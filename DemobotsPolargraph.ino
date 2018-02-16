@@ -1,5 +1,3 @@
-#include <Adafruit_MotorShield.h>
-
 //DEMOBOTS POLARGRAPH :)
 
 #include <Wire.h>
@@ -17,25 +15,40 @@
  */
  
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
-Adafruit_StepperMotor *left;
-Adafruit_StepperMotor *right;
+Adafruit_StepperMotor *left = AFMS.getStepper(200, 1);
+Adafruit_StepperMotor *right = AFMS.getStepper(200, 2);
     
 void setup() {
     Serial.begin(9600);
     Serial.println("setup starting");
-
-    left = AFMS.getStepper(200, 1);
-    right = AFMS.getStepper(200, 2);
   
     AFMS.begin();
     
-    right->release();
-    Serial.print("setup finished");
+    right->setSpeed(10);
+    //right->release();
+    
+    Serial.println("setup finished");
     
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  right->step(200, FORWARD, SINGLE);
-  delay(100);
+
+  Serial.println("Single coil steps");
+  right->step(100, FORWARD, SINGLE); 
+  right->step(100, BACKWARD, SINGLE); 
+
+  Serial.println("Double coil steps");
+  right->step(100, FORWARD, DOUBLE); 
+  right->step(100, BACKWARD, DOUBLE);
+  
+  Serial.println("Interleave coil steps");
+  right->step(100, FORWARD, INTERLEAVE); 
+  right->step(100, BACKWARD, INTERLEAVE); 
+  
+  Serial.println("Microstep steps");
+  right->step(50, FORWARD, MICROSTEP); 
+  right->step(50, BACKWARD, MICROSTEP);
+  
+  delay(1000);
 }
