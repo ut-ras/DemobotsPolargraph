@@ -17,26 +17,26 @@
  */
  
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
-//Adafruit_StepperMotor *leftStepperAF = AFMS.getStepper(200, 1);
+Adafruit_StepperMotor *leftStepperAF = AFMS.getStepper(200, 1);
 Adafruit_StepperMotor *rightStepperAF = AFMS.getStepper(200, 2);
 
 //wrappers for AccelStepper objects
-/*
+
 void forwardstepL() {  
   leftStepperAF->onestep(FORWARD, SINGLE);
 }
 void backwardstepL() {  
   leftStepperAF->onestep(BACKWARD, SINGLE);
 }
-*/
+
 void forwardstepR() {  
-  rightStepperAF->onestep(FORWARD, DOUBLE);
+  rightStepperAF->onestep(FORWARD, SINGLE);
 }
 void backwardstepR() {  
-  rightStepperAF->onestep(BACKWARD, DOUBLE);
+  rightStepperAF->onestep(BACKWARD, SINGLE);
 }
 
-//AccelStepper stepperL(forwardstepL, backwardstepL);
+AccelStepper stepperL(forwardstepL, backwardstepL);
 AccelStepper stepperR(forwardstepR, backwardstepR);
 
 void setup() {
@@ -45,13 +45,13 @@ void setup() {
   
     AFMS.begin();
 
-    /* stepperL.setMaxSpeed(100.0);
+    stepperL.setMaxSpeed(200.0);
     stepperL.setAcceleration(100.0);
-    stepperL.moveTo(24); */
+    stepperL.moveTo(5000);
       
     stepperR.setMaxSpeed(200.0);
     stepperR.setAcceleration(100.0);
-    stepperR.moveTo(50000);
+    stepperR.moveTo(5000);
     
     Serial.println("setup finished");
     
@@ -65,15 +65,17 @@ void loop() {
 
 //test for AccelStepper library
 void testAccelStepperLib() {
-  //if (stepperL.distanceToGo() == 0)
-  //  stepperL.moveTo(-stepperL.currentPosition());
-  
+  if (stepperL.distanceToGo() == 0)
+    stepperL.moveTo(-stepperL.currentPosition());
+
   if (stepperR.distanceToGo() == 0)
     stepperR.moveTo(-stepperR.currentPosition());
-
-  //stepperL.run();
+  
+  stepperL.run();
   stepperR.run();
 }
+
+
 
 
 //test for default adafruit motor shield library
