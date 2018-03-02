@@ -9,12 +9,38 @@
 /*
  * Install AccelStepper Library (Sketch->Tools->Manage Libraries)
  *    Cool library for interleaving steppers, easy to use with different motor drivers
+ *
+ * Width: 48in (motors are 48in apart) = 1220mm
+ * Height: 30in = 762  mm
+ * 
+ * Center of board is 0, 0
+ * X range [-610, 610] mm
+ * Y range [-380, 380] mm
+ * 
  */
+
+#define X_MAX 610
+#define Y_MAX 380
+
+
+
+//unit of measurement: mm
+typedef struct pos_t {
+  int x = 0;
+  int y = 0;  
+} pos;
+
+//current position of our drawing instrument
+pos pos_current;
+
+
 
 
 //H-Bridge AccelStepper objects
 AccelStepper stepperL(4, 0, 1, 2, 3);
 AccelStepper stepperR(4, 4, 5, 6, 7);
+
+
 
 void setup() {
     Serial.begin(9600);
@@ -37,21 +63,58 @@ void setup() {
 void loop() {
   testAccelStepperLib();
 
-
-}
-
-
-//test for AccelStepper library
-void testAccelStepperLib() {
-  if (stepperL.distanceToGo() == 0)
-    stepperL.moveTo(-stepperL.currentPosition());
-
-  if (stepperR.distanceToGo() == 0)
-    stepperR.moveTo(-stepperR.currentPosition());
+  
   
   stepperL.run();
   stepperR.run();
 }
+
+
+
+
+
+
+
+
+
+/* Coordinate Functions for pos struct */
+
+//check if an x coordinate will fit in our system
+bool isValidX(int x) {
+  return (x > X_MAX*-1) && (x < X_MAX);
+}
+
+//check if a y coordinate will fit in our system
+bool isValidY(int y) {
+  return (y > Y_MAX*-1) && (y < Y_MAX);
+}
+
+//distance between coordinates p1 and p2
+int getDistance(pos p1, pos p2) {
+  return sqrt(exp(fabs(p2.x - p1.x)) + exp(fabs(p2.y - p1.y)));
+}
+
+
+/* Helper Functions */
+
+//this lets us use == with pos struct
+bool operator==(const pos& lhs, const pos& rhs) {
+  return (lhs.x == rhs.x) && (lhs.y == rhs.y);
+}
+
+
+
+/* Test for AccelStepper Library */
+void testAccelStepperLib() {
+  if (stepperL.distanceToGo() == 0) {
+    stepperL.moveTo(-stepperL.currentPosition());
+  }
+  if (stepperR.distanceToGo() == 0) {
+    stepperR.moveTo(-stepperR.currentPosition());
+  }
+}
+
+
 
 
 
