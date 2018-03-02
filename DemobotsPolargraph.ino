@@ -10,6 +10,8 @@
  * Install AccelStepper Library (Sketch->Tools->Manage Libraries)
  *    Cool library for interleaving steppers, easy to use with different motor drivers
  *
+ * Measurements are in mm for all dimensions
+ *
  * Width: 48in (motors are 48in apart) = 1220mm
  * Height: 30in = 762  mm
  * 
@@ -17,14 +19,16 @@
  * X range [-610, 610] mm
  * Y range [-380, 380] mm
  * 
+ * NEMA 17 stepper motors, 200 steps
+ * Left Motor: clockwise=down, countercw=up
+ * Right Motor: countercw=down, clockwise=up
  */
 
+//Measurements (mm)
 #define X_MAX 610
 #define Y_MAX 380
+#define PULLEY_RADIUS 10  //update this
 
-
-
-//unit of measurement: mm
 typedef struct pos_t {
   int x = 0;
   int y = 0;  
@@ -36,7 +40,7 @@ pos pos_current;
 
 
 
-//H-Bridge AccelStepper objects
+//H-Bridge AccelStepper objects 
 AccelStepper stepperL(4, 0, 1, 2, 3);
 AccelStepper stepperR(4, 4, 5, 6, 7);
 
@@ -72,9 +76,14 @@ void loop() {
 
 
 
+/* Polargraph Drawing Functions */
+int getLeftStringLength(pos pos_new) {
+  return sqrt(pow((X_MAX + pos_new.x), 2) + pow((Y_MAX - pos_new.y), 2)) ; 
+}
 
-
-
+int getRightStringLength(pos pos_new) {
+  return sqrt(pow((X_MAX - pos_new.x), 2) + pow((Y_MAX - pos_new.y), 2)) ; 
+}
 
 
 /* Coordinate Functions for pos struct */
@@ -89,9 +98,13 @@ bool isValidY(int y) {
   return (y > Y_MAX*-1) && (y < Y_MAX);
 }
 
+bool isValidPos(pos new_pos) {
+  return isValidY(new_pos.y) && isValidX(new_pos.x);
+}
+
 //distance between coordinates p1 and p2
 int getDistance(pos p1, pos p2) {
-  return sqrt(exp(fabs(p2.x - p1.x)) + exp(fabs(p2.y - p1.y)));
+  return sqrt(pow((p2.x - p1.x), 2) + pow((p2.y - p1.y), 2));
 }
 
 
