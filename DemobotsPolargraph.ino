@@ -65,7 +65,7 @@ struct line {
 };
 
 struct polygon {
-  pos * points;
+  pos points[30];
   int points_arr_size;
   int points_arr_index = 0;
 };
@@ -77,10 +77,16 @@ pos pos_current = {0, 0};
 line line_current;
 polygon poly_current;
 
+//TEST
+polygon p;
+  
 //H-Bridge AccelStepper objects 
 AccelStepper stepperL(4, 0, 1, 2, 3);
 AccelStepper stepperR(4, 4, 5, 6, 7);
 
+//Stepper Driver AccelStepper objects 
+//AccelStepper stepperL(1, 5, 4);
+//AccelStepper stepperR(1, 7, 6);
 
 void setup() {
   //only uncomment one setup function at a time
@@ -101,10 +107,15 @@ void setupPolargraph() {
   stepperR.moveTo(0);
 
   // add this for line test
-  pos p1 = {0, 0};
+  /*pos p1 = {0, 0};
   pos p2 = {100, 100};
   line l = {p1, p2};
-  setCurrentLine(l);
+  setCurrentLine(l);*/
+
+  pos points[5] = {{0, 0}, {0, 300}, {300, 300}, {300, 0}, {0, 0}};
+  p.points_arr_size = 5;
+  memcpy(p.points, points, sizeof(points[0]) * p.points_arr_size);
+  setCurrentPolygon(p);
 }
 
 void loop() {
@@ -112,11 +123,12 @@ void loop() {
   
   //only uncomment one test at a time
   //testAccelStepperLib();
-  setPosTest();
+  //setPosTest();
   //drawLineTest();   
-
+  //drawPolyTest();
   
-  //checkSerial();
+  checkSerial();
+  drawPolygon();
   
   //increment the motors towards their goal
   stepperL.run();
@@ -131,6 +143,7 @@ bool checkSerial() {
     String input = Serial.readString();
     polygon p = parsePolygonString(input);
     setCurrentPolygon(p);
+    Serial.println(input);  //for debugging, make sure this works
     return true;
   }
   else {
@@ -153,8 +166,8 @@ polygon parsePolygonString(String polyStr) {
     points[numPoints] = {x, y};
     numPoints++;
   }
-  poly.points = points;
   poly.points_arr_size = numPoints;
+  memcpy(poly.points, points, sizeof(points[0]) * poly.points_arr_size);
   return poly;
 }
 
@@ -303,6 +316,15 @@ void setPosTest() {
     }
     setPos(pos_new);
   }
+}
+
+//make sure to setCurrentPolygon in setup
+void drawPolyTest() {
+  if (drawPolygon()) {
+    p.points_arr_index = 0;
+    setCurrentPolygon(p);
+  }
+  drawPolygon();
 }
 
 //make sure to setCurrentLine in setup. this test will draw the line once then do nothing
