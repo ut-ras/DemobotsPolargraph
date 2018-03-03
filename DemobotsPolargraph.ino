@@ -37,7 +37,7 @@
 //Measurements (mm)
 #define X_MAX 610
 #define Y_MAX 380
-#define PULLEY_RADIUS 10  //update this
+#define PULLEY_RADIUS 80  //update this
 #define PULLEY_CIRC (2 * PULLEY_RADIUS * PI)
 #define STEPS_PER_ROT 200
 
@@ -90,6 +90,8 @@ void setup() {
 }
 
 void setupPolargraph() {
+  Serial.begin(9600);
+  
   stepperL.setMaxSpeed(200.0);
   stepperL.setAcceleration(100.0);
   stepperL.moveTo(0);
@@ -112,12 +114,55 @@ void loop() {
   //testAccelStepperLib();
   setPosTest();
   //drawLineTest();   
-  
 
+  
+  //checkSerial();
+  
   //increment the motors towards their goal
   stepperL.run();
   stepperR.run();
 }
+
+//read string from Serial to set position
+//it will interrupt current drawing if you send over serial, we can add a check for finished if needed
+//POLYGON FORMAT:   (x0,y0)(x1,y1)(x2,y2)(x3,y3)...
+bool checkSerial() {
+  if (Serial.available()) {
+    String input = Serial.readString();
+    polygon p = parsePolygonString(input);
+    setCurrentPolygon(p);
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+polygon parsePolygonString(String polyStr) {
+  polygon poly;
+  pos points[100];
+  int numPoints = 0;
+  
+  int strIndex = 0;
+  while ((strIndex = polyStr.indexOf('(', strIndex)) != -1) {
+    strIndex++;
+    int commaIndex = polyStr.indexOf(',', strIndex);
+    int endIndex = polyStr.indexOf(')', strIndex);
+    int x = polyStr.substring(strIndex, commaIndex).toInt();
+    int y = polyStr.substring(commaIndex + 1, endIndex).toInt();
+    points[numPoints] = {x, y};
+    numPoints++;
+  }
+  poly.points = points;
+  poly.points_arr_size = numPoints;
+  return poly;
+}
+
+
+
+
+
+
 
 
 /* Polargraph Drawing Functions */
@@ -156,10 +201,18 @@ void setCurrentPolygon(polygon poly_new) {
   poly_current = poly_new;
 }
 
-//TODO bool drawPolygon()
 //use array to draw line at current index, set pos when it gets there and increment index. example in drawLine
-
-
+bool drawPolygon() {
+  if (poly_current.points_arr_index == 0 || checkIfNewPos()) {
+    if (poly_current.points_arr_index == poly_current.points_arr_size) {
+      //we have arrived at final destination
+      return true;
+    }
+    setPos(poly_current.points[poly_current.points_arr_index]);
+    poly_current.points_arr_index++;
+  }
+  return false;
+}
 
 
 
@@ -177,11 +230,14 @@ int getRightStringLength(pos pos_new) {
 //Set position of polargraph drawing instrument, return false if invalid pos
 bool setPos(pos pos_new) {
   if (isValidPos(pos_new)) {
-    int left_length = getLeftStringLength(pos_new);
-    int right_length = getRightStringLength(pos_new);
+    int left_length = getLeftStringLength(pos_current);
+    int right_length = getRightStringLength(pos_current);
 
-    int left_steps = left_length * mm_to_steps_pulley;
-    int right_steps = right_length * mm_to_steps_pulley;
+    int left_length_new= getLeftStringLength(pos_new);
+    int right_length_new = getRightStringLength(pos_new);
+
+    int left_steps = (left_length_new - left_length) * mm_to_steps_pulley;
+    int right_steps = (right_length_new - right_length) * mm_to_steps_pulley;
     
     stepperL.move(left_steps);
     stepperR.move(right_steps);
