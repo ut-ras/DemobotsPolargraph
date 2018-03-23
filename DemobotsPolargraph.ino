@@ -76,9 +76,16 @@ pos pos_current = {0, 0};     //current position of our drawing instrument
 line line_current;      //current shape being drawn for drawLine
 polygon poly_current;   //current shape being drawn for drawPolygon
 
+<<<<<<< HEAD
 
 /* Stepper Objects */
   
+=======
+//keep track of current string length, less computation
+int left_length;
+int right_length;
+    
+>>>>>>> origin/master
 //H-Bridge AccelStepper objects 
 //AccelStepper stepperL(4, 0, 1, 2, 3);
 //AccelStepper stepperR(4, 4, 5, 6, 7);
@@ -108,6 +115,24 @@ void setupPolargraph() {
   stepperR.setMaxSpeed(200.0);
   stepperR.setAcceleration(100.0);
   stepperR.moveTo(0);
+<<<<<<< HEAD
+=======
+
+  // add this for line test
+  /*pos p1 = {0, 0};
+  pos p2 = {100, 100};
+  line l = {p1, p2};
+  setCurrentLine(l);*/
+
+  left_length = getLeftStringLength(pos_current);
+  right_length = getRightStringLength(pos_current);
+  
+  polygon p;
+  pos points[5] = {{0, 0}, {0, 300}, {300, 300}, {300, 0}, {0, 0}};
+  p.points_arr_size = 5;
+  memcpy(p.points, points, sizeof(points[0]) * p.points_arr_size);
+  setCurrentPolygon(p);
+>>>>>>> origin/master
 }
 
 void loop() {
@@ -236,14 +261,14 @@ int getRightStringLength(pos pos_new) {
 //Set position of polargraph drawing instrument, return false if invalid pos
 bool setPos(pos pos_new) {
   if (isValidPos(pos_new)) {
-    int left_length = getLeftStringLength(pos_current);
-    int right_length = getRightStringLength(pos_current);
-
     int left_length_new= getLeftStringLength(pos_new);
     int right_length_new = getRightStringLength(pos_new);
 
     int left_steps = (left_length_new - left_length) * mm_to_steps_pulley;
     int right_steps = (right_length_new - right_length) * mm_to_steps_pulley;
+    
+    left_length = left_length_new;
+    right_length = right_length_new;
     
     stepperL.move(left_steps);
     stepperR.move(right_steps);
