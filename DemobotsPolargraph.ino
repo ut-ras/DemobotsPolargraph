@@ -24,7 +24,6 @@
  * 
  * TODO
  * picking up and placing marker with small servo
- * draw polygon function
  * more tests for demonstration
  */
 
@@ -34,26 +33,27 @@
 
 
 
-//Measurements (mm)
+/* Measurements (mm)*/
 #define X_MAX 610
 #define Y_MAX 380
 #define PULLEY_RADIUS 80  //update this
 #define PULLEY_CIRC (2 * PULLEY_RADIUS * PI)
 #define STEPS_PER_ROT 200
-
 //steps = distance * mm_to_steps_pulley
 double mm_to_steps_pulley = double(STEPS_PER_ROT) / double(PULLEY_CIRC);
+
+
+
+/* Structs */
 
 struct pos {
   int x;
   int y;
-
   pos& operator=(const pos& a) {
       x=a.x;
       y=a.y;
       return *this;
   }
-
   bool operator==(const pos& a) const {
       return (x == a.x && y == a.y);
   }
@@ -70,29 +70,32 @@ struct polygon {
   int points_arr_index = 0;
 };
 
-//current position of our drawing instrument
-pos pos_current = {0, 0};
 
-//current shape being drawn for drawLine and drawPolygon
-line line_current;
-polygon poly_current;
+/* Polargraph status */
+pos pos_current = {0, 0};     //current position of our drawing instrument
+line line_current;      //current shape being drawn for drawLine
+polygon poly_current;   //current shape being drawn for drawPolygon
 
-//TEST
-polygon p;
+
+/* Stepper Objects */
   
 //H-Bridge AccelStepper objects 
-AccelStepper stepperL(4, 0, 1, 2, 3);
-AccelStepper stepperR(4, 4, 5, 6, 7);
+//AccelStepper stepperL(4, 0, 1, 2, 3);
+//AccelStepper stepperR(4, 4, 5, 6, 7);
 
-//Stepper Driver AccelStepper objects 
-//AccelStepper stepperL(1, 5, 4);
-//AccelStepper stepperR(1, 7, 6);
+//Stepper Driver AccelStepper objects (1, pinStep, pinDirection);
+AccelStepper stepperL(1, 2, 3);
+AccelStepper stepperR(1, 0, 1);
+
+
+
+/* Main */
 
 void setup() {
   //only uncomment one setup function at a time
-  
   setupPolargraph();
   //setupAccelStepperTest();      //this is only for AccelStepper test, all polargraph tests use setupPolargraph
+  //setupTestShapes();          // add this for line/poly test
 }
 
 void setupPolargraph() {
@@ -105,27 +108,12 @@ void setupPolargraph() {
   stepperR.setMaxSpeed(200.0);
   stepperR.setAcceleration(100.0);
   stepperR.moveTo(0);
-
-  // add this for line test
-  /*pos p1 = {0, 0};
-  pos p2 = {100, 100};
-  line l = {p1, p2};
-  setCurrentLine(l);*/
-
-  pos points[5] = {{0, 0}, {0, 300}, {300, 300}, {300, 0}, {0, 0}};
-  p.points_arr_size = 5;
-  memcpy(p.points, points, sizeof(points[0]) * p.points_arr_size);
-  setCurrentPolygon(p);
 }
 
 void loop() {
   //note: extra lines will be drawn until we can pick up / place marker, i put TODO where we need that
   
-  //only uncomment one test at a time
-  //testAccelStepperLib();
-  //setPosTest();
-  //drawLineTest();   
-  //drawPolyTest();
+  //runTests();
   
   checkSerial();
   drawPolygon();
@@ -134,6 +122,11 @@ void loop() {
   stepperL.run();
   stepperR.run();
 }
+
+
+
+
+/* Serial Functions */
 
 //read string from Serial to set position
 //it will interrupt current drawing if you send over serial, we can add a check for finished if needed
@@ -321,8 +314,7 @@ void setPosTest() {
 //make sure to setCurrentPolygon in setup
 void drawPolyTest() {
   if (drawPolygon()) {
-    p.points_arr_index = 0;
-    setCurrentPolygon(p);
+    poly_current.points_arr_index = 0;
   }
   drawPolygon();
 }
@@ -367,7 +359,26 @@ void testAccelStepperLib() {
   }
 }
 
+void runTests() {
+  //only uncomment one test at a time
+  //testAccelStepperLib();
+  //setPosTest();
+  //drawLineTest();   
+  drawPolyTest();
+}
 
+void setupTestShapes() {
+  pos p1 = {0, 0};
+  pos p2 = {100, 100};
+  line l = {p1, p2};
+  setCurrentLine(l);
+
+  polygon p;
+  pos points[5] = {{0, 0}, {0, 300}, {300, 300}, {300, 0}, {0, 0}};
+  p.points_arr_size = 5;
+  memcpy(p.points, points, sizeof(points[0]) * p.points_arr_size);
+  setCurrentPolygon(p);
+}
 
 
 
