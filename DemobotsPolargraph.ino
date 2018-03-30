@@ -25,18 +25,22 @@
  * TODO
  * picking up and placing marker with small servo
  * more tests for demonstration
+ * 
+ * 
+ * test serial input
+ * (0,0)(100,0)(100,100)(0,100)(0,0)
  */
+
+String longhorn = "(150,72)(146,67)(146,67)(123,63)(123,63)(107,54)(107,54)(58,22)(58,22)(59,21)(59,21)(72,15)(72,15)(71,8)(71,8)(55,3)(55,3)(37,8)(37,8)(27,-19)(27,-19)(21,-40)(21,-40)(22,-50)(22,-50)(23,-64)(23,-64)(10,-76)(10,-76)(-8,-76)(-8,-76)(-9,-75)(-9,-75)(-21,-58)(-21,-58)(-17,-38)(-17,-38)(-23,-20)(-23,-20)(-31,0)(-31,0)(-32,8)(-32,8)(-45,4)(-45,4)(-60,5)(-60,5)(-68,14)(-68,14)(-68,15)(-68,15)(-53,22)(-53,22)(-120,63)(-120,63)(-145,66)(-145,66)(-150,68)(-150,68)(-143,75)(-143,75)(-134,75)(-134,75)(-134,75)(-134,75)(-47,38)(-47,38)(-33,38)(-33,38)(-22,42)(-22,42)(-12,41)(-12,41)(-3,42)(-3,42)(6,42)(6,42)(17,42)(17,42)(30,40)(30,40)(45,37)(45,37)(89,57)(89,57)(115,71)(115,71)(115,71)(115,71)(138,76)(138,76)(150,72)";
 
 #include <Wire.h>
 #include <AccelStepper.h>
 //#include <Adafruit_MotorShield.h>
 
-
-
 /* Measurements (mm)*/
-#define X_MAX 610
-#define Y_MAX 380
-#define PULLEY_RADIUS 80  //update this
+#define X_MAX 560
+#define Y_MAX 330
+#define PULLEY_RADIUS 40  //update this
 #define PULLEY_CIRC (2 * PULLEY_RADIUS * PI)
 #define STEPS_PER_ROT 200
 //steps = distance * mm_to_steps_pulley
@@ -76,23 +80,19 @@ pos pos_current = {0, 0};     //current position of our drawing instrument
 line line_current;      //current shape being drawn for drawLine
 polygon poly_current;   //current shape being drawn for drawPolygon
 
-<<<<<<< HEAD
+boolean isDrawing = false;
 
-/* Stepper Objects */
-  
-=======
 //keep track of current string length, less computation
 int left_length;
 int right_length;
     
->>>>>>> origin/master
 //H-Bridge AccelStepper objects 
 //AccelStepper stepperL(4, 0, 1, 2, 3);
 //AccelStepper stepperR(4, 4, 5, 6, 7);
 
 //Stepper Driver AccelStepper objects (1, pinStep, pinDirection);
-AccelStepper stepperL(1, 2, 3);
-AccelStepper stepperR(1, 0, 1);
+AccelStepper stepperR(1, 2, 3);
+AccelStepper stepperL(1, 0, 1);
 
 
 
@@ -103,6 +103,7 @@ void setup() {
   setupPolargraph();
   //setupAccelStepperTest();      //this is only for AccelStepper test, all polargraph tests use setupPolargraph
   //setupTestShapes();          // add this for line/poly test
+  //stepperTestRotateOnce();
 }
 
 void setupPolargraph() {
@@ -115,24 +116,13 @@ void setupPolargraph() {
   stepperR.setMaxSpeed(200.0);
   stepperR.setAcceleration(100.0);
   stepperR.moveTo(0);
-<<<<<<< HEAD
-=======
 
-  // add this for line test
-  /*pos p1 = {0, 0};
-  pos p2 = {100, 100};
-  line l = {p1, p2};
-  setCurrentLine(l);*/
 
   left_length = getLeftStringLength(pos_current);
   right_length = getRightStringLength(pos_current);
-  
-  polygon p;
-  pos points[5] = {{0, 0}, {0, 300}, {300, 300}, {300, 0}, {0, 0}};
-  p.points_arr_size = 5;
-  memcpy(p.points, points, sizeof(points[0]) * p.points_arr_size);
-  setCurrentPolygon(p);
->>>>>>> origin/master
+
+  //polygon p = parsePolygonString(longhorn);
+  //setCurrentPolygon(p);
 }
 
 void loop() {
@@ -141,7 +131,10 @@ void loop() {
   //runTests();
   
   checkSerial();
-  drawPolygon();
+  
+  if (isDrawing && drawPolygon()) {
+    Serial.println("k");
+  }
   
   //increment the motors towards their goal
   stepperL.run();
@@ -161,7 +154,7 @@ bool checkSerial() {
     String input = Serial.readString();
     polygon p = parsePolygonString(input);
     setCurrentPolygon(p);
-    Serial.println(input);  //for debugging, make sure this works
+    //Serial.println(input);  //for debugging, make sure this works
     return true;
   }
   else {
@@ -200,6 +193,7 @@ polygon parsePolygonString(String polyStr) {
 
 void setCurrentLine(line line_new) {
   line_current = line_new;  
+  isDrawing = true;
 }
 
 //draw line, call from loop, returns true when done, requires picking up/placing marker
@@ -230,6 +224,7 @@ bool drawLine() {
 
 void setCurrentPolygon(polygon poly_new) {
   poly_current = poly_new;
+  isDrawing = true;
 }
 
 //use array to draw line at current index, set pos when it gets there and increment index. example in drawLine
@@ -237,6 +232,7 @@ bool drawPolygon() {
   if (poly_current.points_arr_index == 0 || checkIfNewPos()) {
     if (poly_current.points_arr_index == poly_current.points_arr_size) {
       //we have arrived at final destination
+      isDrawing = false;
       return true;
     }
     setPos(poly_current.points[poly_current.points_arr_index]);
@@ -261,14 +257,23 @@ int getRightStringLength(pos pos_new) {
 //Set position of polargraph drawing instrument, return false if invalid pos
 bool setPos(pos pos_new) {
   if (isValidPos(pos_new)) {
+    //Serial.println("Setting to Pos: x=" + String(pos_new.x) + " y=" + String(pos_new.y));
+    
     int left_length_new= getLeftStringLength(pos_new);
     int right_length_new = getRightStringLength(pos_new);
 
     int left_steps = (left_length_new - left_length) * mm_to_steps_pulley;
-    int right_steps = (right_length_new - right_length) * mm_to_steps_pulley;
+    int right_steps = -1 * (right_length_new - right_length) * mm_to_steps_pulley;
+
+    //Serial.println("Diff Lengths: L=" + String(left_length_new - left_length) + " R=" + String(right_length_new - right_length));
+
+    //Serial.println("Old Lengths: L=" + String(left_length) + " R=" + String(right_length));
     
     left_length = left_length_new;
     right_length = right_length_new;
+    
+    //Serial.println("New Lengths: L=" + String(left_length) + " R=" + String(right_length));
+    //Serial.println("Steps: L=" + String(left_steps) + " R=" + String(right_steps) + "\n");
     
     stepperL.move(left_steps);
     stepperR.move(right_steps);
@@ -282,7 +287,7 @@ bool setPos(pos pos_new) {
 }
 
 bool checkIfNewPos() {
-  return (stepperL.distanceToGo() == 0) && (stepperR.distanceToGo() == 0);
+  return isDrawing && (stepperL.distanceToGo() == 0) && (stepperR.distanceToGo() == 0);
 }
 
 
@@ -405,7 +410,10 @@ void setupTestShapes() {
   setCurrentPolygon(p);
 }
 
-
+void stepperTestRotateOnce() {
+  stepperL.move(200);
+  stepperR.move(200);
+}
 
 /* //Adafruit Motor Shield v2 initialization - move to top for AFMS
    //Not using AFMS until we get a new one, board is broken, short across m3m4
