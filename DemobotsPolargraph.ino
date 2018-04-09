@@ -246,6 +246,8 @@ bool drawPolygon() {
 
 /* Polargraph Positioning Functions */
 
+/* Get the length of the string from the motor to the marker
+ */
 int getLeftStringLength(pos pos_new) {
   return sqrt(pow((X_MAX + pos_new.x), 2) + pow((Y_MAX - pos_new.y), 2)) ; 
 }
@@ -254,30 +256,31 @@ int getRightStringLength(pos pos_new) {
   return sqrt(pow((X_MAX - pos_new.x), 2) + pow((Y_MAX - pos_new.y), 2)) ; 
 }
 
-//Set position of polargraph drawing instrument, return false if invalid pos
+/* Set position of drawing instrument, return false if invalid pos
+ * Position (0, 0) is center of the board
+ */
 bool setPos(pos pos_new) {
   if (isValidPos(pos_new)) {
-    //Serial.println("Setting to Pos: x=" + String(pos_new.x) + " y=" + String(pos_new.y));
     
-    int left_length_new= getLeftStringLength(pos_new);
+    int left_length_new = getLeftStringLength(pos_new);
     int right_length_new = getRightStringLength(pos_new);
 
+    //mm_to_steps_pulley is (steps per rotation) / (pulley circumference) 
     int left_steps = (left_length_new - left_length) * mm_to_steps_pulley;
     int right_steps = -1 * (right_length_new - right_length) * mm_to_steps_pulley;
+    
+    //this starts the movement, each motor is incremented a small amount each loop, very quickly
+    stepperL.move(left_steps);
+    stepperR.move(right_steps);
 
+    //Serial.println("Setting to Pos: x=" + String(pos_new.x) + " y=" + String(pos_new.y));
     //Serial.println("Diff Lengths: L=" + String(left_length_new - left_length) + " R=" + String(right_length_new - right_length));
-
     //Serial.println("Old Lengths: L=" + String(left_length) + " R=" + String(right_length));
+    //Serial.println("New Lengths: L=" + String(left_length_new) + " R=" + String(right_length_new));
+    //Serial.println("Steps: L=" + String(left_steps) + " R=" + String(right_steps) + "\n");
     
     left_length = left_length_new;
     right_length = right_length_new;
-    
-    //Serial.println("New Lengths: L=" + String(left_length) + " R=" + String(right_length));
-    //Serial.println("Steps: L=" + String(left_steps) + " R=" + String(right_steps) + "\n");
-    
-    stepperL.move(left_steps);
-    stepperR.move(right_steps);
-    
     pos_current = pos_new;
     return true;
   }
