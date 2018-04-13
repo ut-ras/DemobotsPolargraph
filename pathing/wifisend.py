@@ -51,15 +51,13 @@ for path_string in path_strings:
         x[index] = round((x[index]+shift_x)*scale_x)
         y[index] = round((y[index]+shift_y)*scale_y)
         code += '"({},{})", '.format(x[index], y[index])
-        #outputfile.write(code)
-        #print("Writing '{}'.".format(code))
+        outputfile.write(code)
     code = code[:-2] + " ] }"
 
     try:
-        #data = str.encode(code)
         print(code)
         s = requests.post(url = POLARGRAPH_IP, data = code)
-        print("Received '{}' in response; continuing.".format(s))
+        print("Received '{} {}' in response; continuing.".format(s, s.content.decode('UTF-8')))
     except:
         print("HTTP error!")
 

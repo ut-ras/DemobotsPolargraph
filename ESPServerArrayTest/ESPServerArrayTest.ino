@@ -39,24 +39,30 @@ void handleRootPath() {            //Handler for the rooth path
 }
 
 void postHandler(){
-	StaticJsonBuffer<1000> JSONBuffer;
+	server.send(200, "text/plain", "Coordinates recived!");
+	DynamicJsonBuffer JSONBuffer;
 	JsonObject& parsedJSON = JSONBuffer.parseObject(server.arg("plain"));
 	String message = server.arg("plain");
 	Serial.println(message);
 
-	if (!parsedJSON.success()) {      //Check for errors in parsing	 
+	if (!parsedJSON.success()) {      //Check for errors in parsing	
+		 server.send(200, "text/plain", "Parsing issue, check yo' JSON, SON!");
 	    Serial.println("Parsing failed");
 	    delay(1000);
 	    return;
-	} 
+	}
+	else
+	{
+		server.send(200, "text/plain", "Coordinates recived!");
+	}
 
 	int arraySize = parsedJSON["array"].size();   //get size of JSON Array
 	Serial.print("\nSize of array: ");
 	Serial.println(arraySize);
 	 
 	for (int i = 0; i < arraySize; i++) { 
-		char print[500] = {parsedJSON["array"][i]};
-	    Serial.println(print);
+		String out = parsedJSON["array"][i];
+	    Serial.println(out);
   }
 
  }
