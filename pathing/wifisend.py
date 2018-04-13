@@ -8,7 +8,7 @@ from IPython import embed
 from matplotlib.pyplot import *
 import requests
 
-POLARGRAPH_IP = "";
+POLARGRAPH_IP = "192.168.43.40";
 
 filename = sys.argv[1]
 svg_file = open(filename)
@@ -20,8 +20,6 @@ outputfile=open(output, 'w')
 svg_dom = minidom.parseString(svg_string)
 path_strings = [path.getAttribute('d') for path in svg_dom.getElementsByTagName('path')]
 
-#print('Attempting to open serial connection...')
-#port = '/dev/ttyACM0'
 try:
     ser =  serial.Serial(port, 9600)
     print('Serial connected to port {}.'.format(port))
@@ -61,8 +59,6 @@ for path_string in path_strings:
         outputfile.write(code)
         print("Writing '{}'.".format(code))
         try:
-            #ser.write(str.encode(code))
-            #s = ser.read()
             data = str.encode(code)
             s = requests.post(url = POLARGRAPH_IP, data = data)
             print("Received '{}' in response; continuing.".format(s))

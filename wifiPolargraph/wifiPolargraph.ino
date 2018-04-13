@@ -131,6 +131,8 @@ void connectWiFi() {
 /* Main */
 
 void setup() {
+  Serial.begin(115200);
+
   connectWiFi();
   //only uncomment one setup function at a time
   setupPolargraph();
@@ -140,9 +142,7 @@ void setup() {
   
 }
 
-void setupPolargraph() {
-  Serial.begin(9600);
-  
+void setupPolargraph() {  
   stepperL.setMaxSpeed(200.0);
   stepperL.setAcceleration(100.0);
   stepperL.moveTo(0);
