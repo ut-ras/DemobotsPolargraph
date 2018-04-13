@@ -4,11 +4,11 @@ import sys
 import serial
 from xml.dom import minidom
 from svg.path import parse_path
-from IPython import embed
-from matplotlib.pyplot import *
+#from IPython import embed
+#from matplotlib.pyplot import *
 import requests
 
-POLARGRAPH_IP = "192.168.43.40";
+POLARGRAPH_IP = "http://192.168.43.40";
 
 filename = sys.argv[1]
 svg_file = open(filename)
@@ -20,13 +20,6 @@ outputfile=open(output, 'w')
 svg_dom = minidom.parseString(svg_string)
 path_strings = [path.getAttribute('d') for path in svg_dom.getElementsByTagName('path')]
 
-try:
-    ser =  serial.Serial(port, 9600)
-    print('Serial connected to port {}.'.format(port))
-except:
-    print('Serial error! Exiting.')
-    sys.exit(0)
- 
 for path_string in path_strings:
     path_data = parse_path(path_string)
 
@@ -58,19 +51,14 @@ for path_string in path_strings:
         code = '({},{})'.format(x[index], y[index])
         outputfile.write(code)
         print("Writing '{}'.".format(code))
-        try:
-            data = str.encode(code)
-            s = requests.post(url = POLARGRAPH_IP, data = data)
-            print("Received '{}' in response; continuing.".format(s))
-        except:
-            print("Serial error!")
+        #try:
+        data = str.encode(code)
+        r = requests.post(url = POLARGRAPH_IP, data = data)
+        print("Received '{}' in response; continuing.".format(r))
+        #except:
+        #    print("HTTP error!")
 
     print('Complete.')
 
-    ser.write(str.encode('(0,0)'))
-    s = ser.read()
 
-    plot(x,y);show()
-    #embed()
 outputfile.close()
-ser.close()
