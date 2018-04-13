@@ -40,8 +40,8 @@ String longhorn = "(150,72)(146,67)(146,67)(123,63)(123,63)(107,54)(107,54)(58,2
 
 
 
-const char* ssid = "your-ssid";
-const char* password = "your-password";
+const char* ssid = "Cole";
+const char* password = "cole1234";
 
 // Create an instance of the server
 // specify the port to listen on as an argument
