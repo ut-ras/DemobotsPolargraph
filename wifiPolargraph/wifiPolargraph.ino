@@ -165,6 +165,7 @@ void loop() {
   //runTests();
   
   checkSerial();
+  checkWiFi();
   
   if (isDrawing && drawPolygon()) {
     Serial.println("k");
@@ -193,8 +194,10 @@ bool checkWiFi() {
   Serial.println(req);
   client.flush();
 
+  polygon p = parsePolygonString(req);
+  setCurrentPolygon(p);
 
-    client.flush();
+  client.flush();
 
   // Prepare the response
   String s = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<!DOCTYPE HTML>\r\n<html>\r\revieved coordinates</html>\n";
