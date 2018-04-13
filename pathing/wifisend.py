@@ -8,7 +8,7 @@ from IPython import embed
 from matplotlib.pyplot import *
 import requests
 
-POLARGRAPH_IP = "192.168.43.40";
+POLARGRAPH_IP = "http://172.20.10.2/";
 
 filename = sys.argv[1]
 svg_file = open(filename)
@@ -26,7 +26,9 @@ try:
 except:
     print('Serial error! Exiting.')
     sys.exit(0)
- 
+
+code = '{ "array": ['
+
 for path_string in path_strings:
     path_data = parse_path(path_string)
 
@@ -55,15 +57,18 @@ for path_string in path_strings:
     for index, item in enumerate(x):
         x[index] = round((x[index]+shift_x)*scale_x)
         y[index] = round((y[index]+shift_y)*scale_y)
-        code = '({},{})'.format(x[index], y[index])
-        outputfile.write(code)
-        print("Writing '{}'.".format(code))
-        try:
-            data = str.encode(code)
-            s = requests.post(url = POLARGRAPH_IP, data = data)
-            print("Received '{}' in response; continuing.".format(s))
-        except:
-            print("Serial error!")
+        code += '"({},{})", '.format(x[index], y[index])
+        #outputfile.write(code)
+        #print("Writing '{}'.".format(code))
+    code = code[:-1] + "] }"
+
+    try:
+        #data = str.encode(code)
+        print(code)
+        s = requests.post(url = POLARGRAPH_IP, data = code)
+        print("Received '{}' in response; continuing.".format(s))
+    except:
+        print("Serial error!")
 
     print('Complete.')
 
