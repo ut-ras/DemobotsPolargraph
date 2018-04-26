@@ -58,7 +58,7 @@ WiFiServer server(80);
 //steps = distance * mm_to_steps_pulley
 double mm_to_steps_pulley = double(STEPS_PER_ROT) / double(PULLEY_CIRC);
 
-
+bool serialMode = false;
 
 /* Structs */
 
@@ -109,25 +109,34 @@ AccelStepper stepperL(1, 4, 5);                     //lstep = gpio4, ldir = gpio
 
 
 void connectWiFi() {
-  Serial.print("Connecting to ");
+  Serial.print("Connecting to WiFi network: ");
   Serial.println(ssid);
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
+  long timeoutTime = millis() + 10000;
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
+    if (millis() > timeoutTime) {
+      Serial.println("\nCouldn't connect to WiFi, entering Serial mode.");
+      serialMode = true;
+      break;
+    }
   }
   Serial.println("");
-  Serial.println("WiFi connected");
 
-  // Start the server
-  server.begin();
-  Serial.println("Server started");
-
-  // Print the IP address
-  Serial.println(WiFi.localIP());
+  if (!serialMode) {
+    Serial.println("WiFi connected");
+  
+    // Start the server
+    server.begin();
+    Serial.println("Server started");
+  
+    // Print the IP address
+    Serial.println(WiFi.localIP());
+  }
 }
 
 /* Main */
@@ -138,12 +147,14 @@ void setup() {
   Serial.println("Welcome to Polargraph");
 
   connectWiFi();
+  
   //only uncomment one setup function at a time
   setupPolargraph();
   //setupAccelStepperTest();      //this is only for AccelStepper test, all polargraph tests use setupPolargraph
   //setupTestShapes();          // add this for line/poly test
   //stepperTestRotateOnce();
 
+  Serial.println("Welcome to the Demobots Polargraph! Send points over WiFi or Serial in this format: (x1,y1)(x2,y2)....");
 }
 
 void setupPolargraph() {
@@ -171,9 +182,8 @@ void loop() {
   checkSerial();
   checkWiFi();
 
-  if (isDrawing && drawPolygon()) {
-    Serial.println("k");
-  }
+  checkLineFinished();
+
 
   //increment the motors towards their goal
   stepperL.run();
@@ -181,7 +191,21 @@ void loop() {
 }
 
 
+bool checkLineFinished() {
+    if (isDrawing && drawPolygon()) {
+    //send notification that the current line has finished
+    Serial.println("k");
+    if (!serialMode) {
+      //wifi notification
+    }
+  }
+}
+
 bool checkWiFi() {
+  if (serialMode) {
+    return false;
+  }
+  
   WiFiClient client = server.available();
   if (!client) {
     return false;
