@@ -1,15 +1,18 @@
 # Pathing
 
-This is a (hacked together in half an hour) group of utilities to convert
-SVG files into input for the polargraph.
+This is a utility to convert SVG files into input for the polargraph.
 
-Both pathify.py and send.py (they should eventually be merged into one file)
-take the name of an svg file as an argument, then iterate through all paths
+pathify.py takes the name of an svg file as an argument, then iterates through all paths
 in the file. Paths are centered and scaled to fit the polargraph. Endpoints
 of each curve in each path are translated into the form '(x,y)', which the
 polargraph currently understands, and written out to a file. Points are also
 displayed in a matplotlib graph.
 
+More details may be found in the pathify.py source.
+
 send.py additionally connects (to the polargraph) over serial port /dev/ttyAMC0,
 then sends each point over the port as it is calculated. This is currently
 how the polargraph is operated.
+
+NOTE: the svg read functions in send.py are out of date. The wifi send function
+should be merged into pathify.py.
